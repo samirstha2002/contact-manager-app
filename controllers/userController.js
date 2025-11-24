@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const User = require("./../models/usermodel");
-const { hash } = require("bcrypt");
+
 exports.register = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -33,10 +34,35 @@ exports.register = asyncHandler(async (req, res) => {
 });
 
 exports.login = asyncHandler(async (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "user is logged in ",
-  });
+  const { email, password } = req.body;
+  // check if email and password are provided by user
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("All Fields are mandatory");
+  }
+  // validate user email and password for logging in
+  const user = await User.findOne({ email });
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const accessToken = jwt.sign(
+      {
+        user: {
+          username: user.username,
+          email: user.email,
+          id: user.id,
+        },
+      },
+      process.env.SECRET_ACCESS_TOKEN,
+      { expiresIn: "10m" }
+    );
+
+    res.status(200).json({
+      status: "success",
+      accessToken,
+    });
+  } else {
+    res.status(401);
+    throw new Error("email or password is incorrect");
+  }
 });
 
 exports.currentUser = asyncHandler(async (req, res) => {
