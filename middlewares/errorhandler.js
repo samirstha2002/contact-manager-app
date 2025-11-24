@@ -1,7 +1,15 @@
-const { stack } = require("../routes/contactroutes");
 const { constant } = require("./../constant");
 const errorhandler = (err, req, res, next) => {
-  const statusCode = res.statusCode ? res.statusCode : 500;
+  let statusCode = res.statusCode ? res.statusCode : 500;
+
+  if (err.code === 11000) {
+    statusCode = 400;
+    return res.status(statusCode).json({
+      title: "Duplicate Field Error",
+      message: `Duplicate value: ${JSON.stringify(err.keyValue)}`,
+      stackTrace: err.stack,
+    });
+  }
   switch (statusCode) {
     case constant.VALIDATION_ERROR:
       res.json({
