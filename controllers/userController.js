@@ -68,6 +68,6 @@ exports.login = asyncHandler(async (req, res) => {
 exports.currentUser = asyncHandler(async (req, res) => {
   res.status(200).json({
     status: "success",
-    message: "current user information ",
+    user: req.user,
   });
 });
